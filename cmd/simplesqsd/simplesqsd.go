@@ -85,7 +85,7 @@ func main() {
 	c.CronEndPoint = os.Getenv("SQSD_CRON_ENDPOINT")
 	c.CronTimeout = getEnvInt("SQSD_CRON_TIMEOUT", 15)
 
-	c.ErrorVisibilityTimeout = getEnvInt("SQSD_ERROR_VISIBILITY_TIMEOUT", 600)
+	c.ErrorVisibilityTimeout = getEnvInt("SQSD_ERROR_VISIBILITY_TIMEOUT", 0)
 
 
 	if len(c.QueueRegion) == 0 {

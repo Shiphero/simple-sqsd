@@ -140,11 +140,13 @@ func (s *Supervisor) worker() {
 						VisibilityTimeout: aws.Int64(sec),
 					})
 				default:
-					changeVisibilityEntries = append(changeVisibilityEntries, &sqs.ChangeMessageVisibilityBatchRequestEntry{
-						Id:                msg.MessageId,
-						ReceiptHandle:     msg.ReceiptHandle,
-						VisibilityTimeout: aws.Int64(int64(s.workerConfig.ErrorVisibilityTimeout)),
-					})
+					if s.workerConfig.ErrorVisibilityTimeout > 0 {
+						changeVisibilityEntries = append(changeVisibilityEntries, &sqs.ChangeMessageVisibilityBatchRequestEntry{
+							Id:                msg.MessageId,
+							ReceiptHandle:     msg.ReceiptHandle,
+							VisibilityTimeout: aws.Int64(int64(s.workerConfig.ErrorVisibilityTimeout)),
+						})
+					}
 				}
 
 				continue
