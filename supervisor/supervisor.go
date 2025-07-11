@@ -140,7 +140,6 @@ func (s *Supervisor) worker() {
 						VisibilityTimeout: aws.Int64(sec),
 					})
 				default:
-					fmt.Println("GOT STATUS", res.StatusCode, "using", s.workerConfig.ErrorVisibilityTimeout)
 					changeVisibilityEntries = append(changeVisibilityEntries, &sqs.ChangeMessageVisibilityBatchRequestEntry{
 						Id:                msg.MessageId,
 						ReceiptHandle:     msg.ReceiptHandle,
