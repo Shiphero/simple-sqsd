@@ -48,6 +48,8 @@ type WorkerConfig struct {
 	HMACSecretKey  []byte
 
 	UserAgent string
+
+	ErrorVisibilityTimeout int
 }
 
 type httpClient interface {
@@ -124,7 +126,8 @@ func (s *Supervisor) worker() {
 
 			if res.StatusCode < http.StatusOK || res.StatusCode > http.StatusIMUsed {
 
-				if res.StatusCode == http.StatusTooManyRequests {
+				switch res.StatusCode {
+				case http.StatusTooManyRequests:
 					sec, err := getRetryAfterFromResponse(res)
 					if err != nil {
 						s.logger.Errorf("Error getting retry after value from HTTP response: %s", err)
@@ -136,9 +139,14 @@ func (s *Supervisor) worker() {
 						ReceiptHandle:     msg.ReceiptHandle,
 						VisibilityTimeout: aws.Int64(sec),
 					})
+				default:
+					fmt.Println("GOT STATUS", res.StatusCode, "using", s.workerConfig.ErrorVisibilityTimeout)
+					changeVisibilityEntries = append(changeVisibilityEntries, &sqs.ChangeMessageVisibilityBatchRequestEntry{
+						Id:                msg.MessageId,
+						ReceiptHandle:     msg.ReceiptHandle,
+						VisibilityTimeout: aws.Int64(int64(s.workerConfig.ErrorVisibilityTimeout)),
+					})
 				}
-
-				s.logger.Errorf("Non-successful status code: %d", res.StatusCode)
 
 				continue
 

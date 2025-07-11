@@ -48,6 +48,8 @@ type config struct {
 	CronTimeout  int
 
 	UserAgent string
+
+	ErrorVisibilityTimeout int
 }
 
 func main() {
@@ -82,6 +84,8 @@ func main() {
 	c.CronFile = os.Getenv("SQSD_CRON_FILE")
 	c.CronEndPoint = os.Getenv("SQSD_CRON_ENDPOINT")
 	c.CronTimeout = getEnvInt("SQSD_CRON_TIMEOUT", 15)
+
+	c.ErrorVisibilityTimeout = getEnvInt("SQSD_ERROR_VISIBILITY_TIMEOUT", 600)
 
 
 	if len(c.QueueRegion) == 0 {
@@ -172,6 +176,8 @@ func main() {
 		HMACSecretKey:  c.HMACSecretKey,
 
 		UserAgent: c.UserAgent,
+
+		ErrorVisibilityTimeout: c.ErrorVisibilityTimeout,
 	}
 
 	httpClient := &http.Client{
