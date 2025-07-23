@@ -190,11 +190,12 @@ func (s *Supervisor) worker() {
 func (s *Supervisor) httpRequest(msg *sqs.Message) (*http.Response, error) {
 	body := *msg.Body
 	req, err := http.NewRequest("POST", s.workerConfig.HTTPURL, bytes.NewBufferString(body))
-	req.Header.Add("X-Aws-Sqsd-Msgid", *msg.MessageId)
-	s.addMessageAttributesToHeader(msg.MessageAttributes, req.Header)
 	if err != nil {
 		return nil, fmt.Errorf("Error while creating HTTP request: %s", err)
 	}
+	req.Header.Add("X-Aws-Sqsd-Msgid", *msg.MessageId)
+	s.addMessageAttributesToHeader(msg.MessageAttributes, req.Header)
+	
 
 	if len(s.workerConfig.HMACSecretKey) > 0 {
 		hmac, err := makeHMAC(strings.Join([]string{s.hmacSignature, body}, ""), s.workerConfig.HMACSecretKey)
