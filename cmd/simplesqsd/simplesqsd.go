@@ -24,6 +24,7 @@ type config struct {
 	QueueMaxMessages int
 	QueueWaitTime    int
 
+	// HTTPMaxConns is the Maximum number of concurrent connections to the application.
 	HTTPMaxConns    int
 	HTTPURL         string
 	HTTPContentType string
@@ -50,6 +51,15 @@ type config struct {
 	UserAgent string
 
 	ErrorVisibilityTimeout int
+
+	// VisibilityTimeout is The amount of time to lock an incoming message for processing before returning it to the queue.
+	VisibilityTimeout int
+	// MaxRetries is the Maximum number of retries after which the message is discarded.
+	MaxRetries int // Default 10
+	// InactivityTimeout is the Number of seconds to wait for a response from the application on an existing connection.
+	InactivityTimeoutSeconds int // Default 815
+	// RetentionPeriod is the Number of seconds that a message is valid for active processing.
+	RetentionPeriodSeconds int // Default 345600
 }
 
 func main() {
@@ -65,6 +75,11 @@ func main() {
 	c.HTTPURL = os.Getenv("SQSD_HTTP_URL")
 	c.HTTPContentType = os.Getenv("SQSD_HTTP_CONTENT_TYPE")
 	c.UserAgent = os.Getenv("SQSD_HTTP_USER_AGENT")
+
+	c.VisibilityTimeout = getEnvInt("SQSD_QUEUE_VISIBILITY_TIMEOUT", 820)
+	c.MaxRetries = getEnvInt("SQSD_QUEUE_MAX_RETRIES", 10)
+	c.InactivityTimeoutSeconds = getEnvInt("SQSD_QUEUE_INACTIVITY_TIMEOUT", 815)
+	c.RetentionPeriodSeconds = getEnvInt("SQSD_RETENTION_PERIOD", 345600)
 
 	c.HTTPHealthPath = os.Getenv("SQSD_HTTP_HEALTH_PATH")
 	c.HTTPHealthWait = getEnvInt("SQSD_HTTP_HEALTH_WAIT", 5)
@@ -86,7 +101,6 @@ func main() {
 	c.CronTimeout = getEnvInt("SQSD_CRON_TIMEOUT", 15)
 
 	c.ErrorVisibilityTimeout = getEnvInt("SQSD_ERROR_VISIBILITY_TIMEOUT", 0)
-
 
 	if len(c.QueueRegion) == 0 {
 		log.Fatal("SQSD_QUEUE_REGION cannot be empty")
@@ -178,6 +192,11 @@ func main() {
 		UserAgent: c.UserAgent,
 
 		ErrorVisibilityTimeout: c.ErrorVisibilityTimeout,
+
+		MaxRetries:               c.MaxRetries,
+		InactivityTimeoutSeconds: c.InactivityTimeoutSeconds,
+		RetentionPeriodSeconds:   c.RetentionPeriodSeconds,
+		VisibilityTimeout:        c.VisibilityTimeout,
 	}
 
 	httpClient := &http.Client{
