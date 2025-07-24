@@ -232,14 +232,14 @@ func main() {
 		HTTPAUTHORIZATIONHeader:     c.HTTPAUTHORIZATIONHeader,
 		HTTPAUTHORIZATIONHeaderName: c.HTTPAUTHORIZATIONHeaderName,
 	})
-	if nil != cronDaemon {
+	if cronDaemon != nil {
 		go cronDaemon.Run()
+		defer cronDaemon.Stop()
 	}
 
 	s := supervisor.NewSupervisor(logger, sqsSvc, httpClient, wConf)
 	s.Start(c.HTTPMaxConns)
 	s.Wait()
-	cronDaemon.Stop()
 }
 
 func getEnvInt(key string, def int) int {

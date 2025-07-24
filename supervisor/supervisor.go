@@ -268,18 +268,18 @@ func (s *Supervisor) httpRequest(msg *sqs.Message) (*http.Response, error) {
 	body := *msg.Body
 	req, err := http.NewRequest("POST", s.workerConfig.HTTPURL, bytes.NewBufferString(body))
 	if err != nil {
-		return nil, fmt.Errorf("Error while creating HTTP request: %s", err)
+		return nil, fmt.Errorf("error while creating HTTP request: %s", err)
 	}
 	req.Header.Add("X-Aws-Sqsd-Msgid", *msg.MessageId)
 	s.addMessageAttributesToHeader(msg.MessageAttributes, req.Header)
 
 	if len(s.workerConfig.HMACSecretKey) > 0 {
-		hmac, err := makeHMAC(strings.Join([]string{s.hmacSignature, body}, ""), s.workerConfig.HMACSecretKey)
+		hmacHeader, err := makeHMAC(strings.Join([]string{s.hmacSignature, body}, ""), s.workerConfig.HMACSecretKey)
 		if err != nil {
 			return nil, err
 		}
 
-		req.Header.Set(s.workerConfig.HTTPHMACHeader, hmac)
+		req.Header.Set(s.workerConfig.HTTPHMACHeader, hmacHeader)
 	}
 
 	if len(s.workerConfig.HTTPAUTHORIZATIONHeader) > 0 {
@@ -303,7 +303,11 @@ func (s *Supervisor) httpRequest(msg *sqs.Message) (*http.Response, error) {
 		return res, err
 	}
 
-	res.Body.Close()
+	err = res.Body.Close()
+	if err != nil {
+		// This is not necessary, I am just trying to shut up the linter.
+		s.logger.Errorf("Error while closing response body: %s", err)
+	}
 
 	return res, nil
 }
@@ -331,7 +335,7 @@ func makeHMAC(signature string, secretKey []byte) (string, error) {
 
 	_, err := mac.Write([]byte(signature))
 	if err != nil {
-		return "", fmt.Errorf("Error while writing HMAC: %s", err)
+		return "", fmt.Errorf("error while writing HMAC: %s", err)
 	}
 
 	return hex.EncodeToString(mac.Sum(nil)), nil

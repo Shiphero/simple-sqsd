@@ -172,7 +172,11 @@ func TestSupervisorHMAC(t *testing.T) {
 		mac := hmac.New(sha256.New, hmacSecretKey)
 
 		body, _ := io.ReadAll(r.Body)
-		r.Body.Close()
+		err := r.Body.Close()
+		if err != nil {
+			// unnecessary, just linter complaining
+			assert.Fail(t, "unable to close body")
+		}
 
 		mac.Write([]byte(fmt.Sprintf("%s %s\n%s", r.Method, fmt.Sprintf("http://%s", r.Host), string(body))))
 		expectedMAC := hex.EncodeToString(mac.Sum(nil))
