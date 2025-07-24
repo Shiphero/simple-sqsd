@@ -106,6 +106,8 @@ const maxDurationStat = 100
 // min diff to detect in milliseconds for processing time trend
 const minTrendUpWeCareFor = 1000.0 // ms
 
+const firstRecvTimestampAttrKey = "ApproximateFirstReceiveTimestamp"
+
 func (s *Supervisor) worker() {
 	defer s.wg.Done()
 
@@ -157,7 +159,7 @@ func (s *Supervisor) worker() {
 		batchTimes := make([]float64, 0, len(output.Messages))
 		for _, msg := range output.Messages {
 			// Perform a check on the message's validity and expire it if deemed too old.
-			if firstReceivedTSInSecondsStr, ok := msg.Attributes["ApproximateFirstReceiveTimestamp"]; ok && firstReceivedTSInSecondsStr != nil {
+			if firstReceivedTSInSecondsStr, ok := msg.Attributes[firstRecvTimestampAttrKey]; ok && firstReceivedTSInSecondsStr != nil {
 				var firstReceivedTSInSeconds int64
 				if firstReceivedTSInSeconds, err = strconv.ParseInt(*firstReceivedTSInSecondsStr, 10, 64); err != nil {
 					s.logger.Errorf("Error while parsing first received timestamp (%s): %s", *firstReceivedTSInSecondsStr, err)
